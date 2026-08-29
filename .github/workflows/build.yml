@@ -28,20 +28,25 @@ jobs:
           ref: ${{ inputs.stalwart_ref }}
           fetch-depth: 1
 
-      - name: Read Stalwart version
-        id: version
-        shell: bash
-        run: |
-          VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-          echo "Stalwart version: $VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Set image tag
         id: tag
         shell: bash
         run: |
-          TAG="${{ steps.version.outputs.version }}-fdb${{ env.FDB_VERSION }}"
-          echo "Image tag: $TAG"
+          REF="${{ inputs.stalwart_ref }}"
+
+          if [[ "$REF" == v* ]]; then
+            VERSION="${REF#v}"
+          else
+            VERSION="$REF"
+          fi
+
+          TAG="${VERSION}-fdb${{ env.FDB_VERSION }}"
+
+          echo "Stalwart ref: $REF"
+          echo "Stalwart version: $VERSION"
+          echo "FoundationDB version: ${{ env.FDB_VERSION }}"
+          echo "Docker image tag: $TAG"
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
